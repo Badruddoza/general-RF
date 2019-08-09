@@ -1,0 +1,45 @@
+rm(list = ls())
+library("ranger")
+getwd()
+setwd("E:/research/Data")
+rdata<-read.csv("rdata.csv")
+
+yy=rdata$y_variable
+dataset=rdata
+importance_info=c("permutation","impurity","none")
+importance_info=importance_info[[3]]
+forest_info=c(500,4,3,.6)
+n_trees=forest_info[[1]]
+m_tries=forest_info[[2]]
+min_nodes=forest_info[[3]]
+sample_frac=forest_info[[4]]
+
+bb<-ranger(
+  formula         = yy ~ ., 
+  data            = dataset,
+  importance      = importance_info,
+  num.trees       = n_trees,
+  mtry            = m_tries,
+  min.node.size   = min_nodes,
+  sample.fraction = sample_frac,
+  seed            = 123)
+pred_err=bb$prediction.error
+if(bb$forest$treetype=="Classification"){
+  cma=bb$confusion.matrix[2,2]
+  cmb=bb$confusion.matrix[2,1]
+  cmc=bb$confusion.matrix[1,2]
+  cmd=bb$confusion.matrix[1,1]
+  r_sqd=0
+  typ_class=1
+}else{
+  cma=0
+  cmb=0
+  cmc=0
+  cmd=0
+  r_sqd=bb$r.squared
+  typ_class=0
+}
+out=c(dim(dataset)[[1]],dim(dataset)[[2]],
+      n_trees,m_tries,min_nodes,sample_frac,pred_err,r_sqd,
+      cma,cmb,cmc,cmd,typ_class)
+out
